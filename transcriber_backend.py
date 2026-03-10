@@ -14,11 +14,38 @@ def main():
     audio_file = sys.argv[1]
     output_path = sys.argv[2]
     
+    import shutil
     print("[*] Loading Faster-Whisper (large-v3-turbo on 8GB VRAM)...", flush=True)
-    try:
-        model = WhisperModel("large-v3-turbo", device="cuda", compute_type="float16")
-    except Exception as e:
-        print(f"[!] Error loading whisper model: {e}", flush=True)
+    
+    model = None
+    for attempt in range(2):
+        try:
+            model = WhisperModel("large-v3-turbo", device="cuda", compute_type="float16")
+            break # Success
+        except Exception as e:
+            error_str = str(e)
+            if "model.bin" in error_str and "models--mobiuslabsgmbh--faster-whisper" in error_str and attempt == 0:
+                print(f"[!] Detected corrupted HuggingFace cache: {e}", flush=True)
+                print("[*] Attempting to auto-delete corrupted cache and redownload...", flush=True)
+                
+                cache_dir = os.path.expanduser("~/.cache/huggingface/hub/models--mobiuslabsgmbh--faster-whisper-large-v3-turbo")
+                if os.path.exists(cache_dir):
+                    try:
+                        shutil.rmtree(cache_dir)
+                        print("[*] Corrupted cache deleted successfully. Redownloading model (this may take a few minutes)...", flush=True)
+                        continue # Try again
+                    except Exception as rm_err:
+                        print(f"[!] Failed to delete cache: {rm_err}. Please manually delete {cache_dir}", flush=True)
+                        sys.exit(1)
+                else:
+                    print(f"[!] Cache directory not found at {cache_dir}. Cannot auto-repair.", flush=True)
+                    sys.exit(1)
+            else:
+                print(f"[!] Error loading whisper model: {e}", flush=True)
+                sys.exit(1)
+                
+    if model is None:
+        print("[!] Failed to initialize Whisper model after retries.", flush=True)
         sys.exit(1)
         
     print("[*] Transcribing audio (this will be very fast)...", flush=True)

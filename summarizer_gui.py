@@ -190,7 +190,13 @@ class SummarizerApp:
                 transcriber_script = os.path.join(current_dir, "transcriber_backend.py")
                 
                 # Run transcriber in a subprocess so Windows forcefully reclaims the 3GB VRAM pool when it terminates
-                cmd = [sys.executable, transcriber_script, audio_file, transcript_path]
+                if getattr(sys, 'frozen', False):
+                    # During Inno Setup Installation, we mapped it to {app}/transcriber_backend_data
+                    transcriber_exe = os.path.join(current_dir, "transcriber_backend_data", "transcriber_backend.exe")
+                    cmd = [transcriber_exe, audio_file, transcript_path]
+                else:
+                    cmd = [sys.executable, transcriber_script, audio_file, transcript_path]
+                    
                 try:
                     creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
                     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", creationflags=creation_flags)

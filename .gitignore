@@ -35,3 +35,7 @@ OllamaSetup.exe
 # Cache
 .cache/
 hf_cache/
+
+# Local Notes
+memory.md
+generate_marketing_pdf.py

@@ -11,19 +11,29 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 FFMPEG_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
 ZIP_PATH = os.path.join(DIR, "ffmpeg.zip")
 FFMPEG_EXE = os.path.join(DIR, "ffmpeg.exe")
+FFPROBE_EXE = os.path.join(DIR, "ffprobe.exe")
 
-if not os.path.exists(FFMPEG_EXE):
+if not os.path.exists(FFMPEG_EXE) or not os.path.exists(FFPROBE_EXE):
     print("[*] Downloading FFmpeg statically...")
     urllib.request.urlretrieve(FFMPEG_URL, ZIP_PATH)
     print("[*] Extracting FFmpeg...")
     with zipfile.ZipFile(ZIP_PATH, 'r') as zf:
         # The zip structure is typically: ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe
+        extracted = 0
         for member in zf.namelist():
             if member.endswith("ffmpeg.exe"):
                 # Extract specifically ffmpeg.exe
                 with zf.open(member) as source:
                     with open(FFMPEG_EXE, "wb") as f:
                         shutil.copyfileobj(source, f)
+                extracted += 1
+            elif member.endswith("ffprobe.exe"):
+                # Extract specifically ffprobe.exe
+                with zf.open(member) as source:
+                    with open(FFPROBE_EXE, "wb") as f:
+                        shutil.copyfileobj(source, f)
+                extracted += 1
+            if extracted >= 2:
                 break
     try:
         os.remove(ZIP_PATH)
@@ -35,11 +45,17 @@ print("[*] Compiling Python code via PyInstaller...")
 # We use one-dir for faster extraction and bundle both the GUI and backend
 # The transcriber_backend.py is separate but we can just use the exact same Pyinstaller folder
 gui_exe = os.path.join(DIR, "dist", "summarizer_gui", "summarizer_gui.exe")
+
+# Force rebuild to pick up new ffprobe
+if os.path.exists(gui_exe):
+    os.remove(gui_exe)
+
 if not os.path.exists(gui_exe):
     gui_cmd = [
         sys.executable, "-m", "PyInstaller",
         "--noconfirm", "--onedir", "--windowed",
         "--add-data", f"{FFMPEG_EXE};.",
+        "--add-data", f"{FFPROBE_EXE};.",
         "summarizer_gui.py"
     ]
     subprocess.run(gui_cmd, check=True)

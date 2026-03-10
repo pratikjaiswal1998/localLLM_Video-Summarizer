@@ -5,6 +5,7 @@ import tempfile
 import subprocess
 import json
 import re
+import ctypes
 import tkinter as tk
 import customtkinter as ctk
 from tkinter import messagebox
@@ -128,6 +129,10 @@ class SummarizerApp:
         
     def run_pipeline(self, url, generate_ppt):
         current_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+        if getattr(sys, 'frozen', False):
+            ffmpeg_location = sys._MEIPASS
+        else:
+            ffmpeg_location = current_dir
         
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -141,6 +146,7 @@ class SummarizerApp:
                             'format': 'bestvideo[height<=720]+bestaudio/best',
                             'outtmpl': os.path.join(temp_dir, 'video.%(ext)s'),
                             'merge_output_format': 'mp4',
+                            'ffmpeg_location': ffmpeg_location,
                             'quiet': True,
                             'no_warnings': True
                         }
@@ -149,6 +155,7 @@ class SummarizerApp:
                         ydl_opts = {
                             'format': 'bestaudio/best',
                             'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
+                            'ffmpeg_location': ffmpeg_location,
                             'postprocessors': [{
                                 'key': 'FFmpegExtractAudio',
                                 'preferredcodec': 'mp3',

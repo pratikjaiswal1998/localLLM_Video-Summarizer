@@ -1,6 +1,5 @@
 
 [Setup]
-AppId={{D3A0A7A1-42AD-4F90-B8A6-A2C872E9D84B}
 AppName=AI Video Summarizer
 AppVersion=1.0
 AppPublisher=Pratik
@@ -14,9 +13,6 @@ OutputBaseFilename=AISummarizerSetup
 SetupIconFile=C:\Users\Pratik\Documents\AntiAutomation2\AI_Summarizer\icon.ico
 LicenseFile=C:\Users\Pratik\Documents\AntiAutomation2\AI_Summarizer\LICENSE.txt
 ArchitecturesInstallIn64BitMode=x64
-AppMutex=AIVideoSummarizerMutex
-CloseApplications=yes
-RestartApplications=yes
 
 [Files]
 ; Main Python Executable and Env
